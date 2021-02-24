@@ -1,7 +1,8 @@
-import { renameTypePrefix, testTypeNameValid } from './const';
 import { CommonError } from './error';
+import { renameTypePrefix, testTypeNameValid } from './const';
 
 const swaggerDefPrefix = '#/definitions/';
+const openApiDefPrefix = '#/components/schemas/';
 
 export function fixSwagger(data: any) {
   fixRefName(data);
@@ -10,17 +11,27 @@ export function fixSwagger(data: any) {
 
 function fixRefName(data: any) {
   const refMap: { [key: string]: any[] } = {};
-  Object.keys(data.definitions || {}).forEach(key => {
+  let definitions = data.definitions || {};
+  Object.keys(definitions).forEach(key => {
     refMap[key] = [];
   });
+  if (data.components && data.components.schemas) {
+    Object.keys(data.components.schemas).forEach(key => {
+      refMap[key] = [];
+    });
+    definitions = {
+      ...definitions,
+      ...data.components.schemas,
+    };
+  }
 
   findRef(data).forEach(refItem => {
     const $ref: string = refItem.$ref;
 
-    if (!$ref.startsWith(swaggerDefPrefix)) {
+    if (!$ref.startsWith(swaggerDefPrefix) && !$ref.startsWith(openApiDefPrefix)) {
       throw new CommonError(`未实现解析: ${$ref}`);
     }
-    const key = $ref.replace(swaggerDefPrefix, '');
+    const key = $ref.replace(swaggerDefPrefix, '').replace(openApiDefPrefix, '');
     if (!refMap[key]) {
       console.warn(`未找到类型定义: ${$ref}`);
       delete refItem.$ref;
@@ -96,11 +107,6 @@ function fixRequestBody(data: any) {
 }
 
 function findRef(object: any) {
-  // 考虑到 example
-  if (!object || ({}).toString.call(object) !== '[object Object]') {
-    return [];
-  }
-
   if (object.$ref) {
     return [object];
   }

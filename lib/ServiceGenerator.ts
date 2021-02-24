@@ -140,6 +140,13 @@ export class ServiceGenerator {
       return Object.keys(defines).map(typeName => {
         try {
           const props: SchemaObject = this.resolveRefObject(defines[typeName]);
+          if (props.type === 'string' && props.enum) {
+            return {
+              typeName,
+              ...props,
+              type: props.enum.map((v: string) => `"${v}"`).join(' | ')
+            };
+          }
           if (props.type !== 'object') {
             throw new CommonError(`Unsupported interface type: ${typeName}: ${props.type}`);
           }
@@ -151,7 +158,7 @@ export class ServiceGenerator {
                 const propSchema: SchemaObject = props.properties[propName];
                 return {
                   ...propSchema,
-                  name: propName.includes('-') ? `"${propName}"` : propName,
+                  name: propName,
                   type: this.getType(propSchema),
                   desc: [propSchema.title, propSchema.description].filter(s => s).join(' '),
                   required: requiredPropKeys.some(key => key === propName),
@@ -416,13 +423,14 @@ export class ServiceGenerator {
   }
 
   protected toCamelCase(s: string) {
-    return s.replace(/_(\w)/g, function (_all, letter) {
+    return s.replace(/_(\w)/g, function(_all, letter) {
       return letter.toUpperCase();
     });
   }
 
   protected getType(schemaObject: SchemaObject, namespace: string = ''): string {
-    if (!schemaObject) {
+    // @ts-ignore
+    if (!schemaObject && schemaObject !== 0) {
       return 'any';
     }
     if (typeof schemaObject !== 'object') {
@@ -475,8 +483,7 @@ export class ServiceGenerator {
         return 'boolean';
 
       case 'array':
-        const str = this.getType(schemaObject.items, namespace);
-        return `${['|', '&'].some(sep => str.includes(sep)) ? `(${str})` : str}[]`;
+        return `${this.getType(schemaObject.items, namespace)}[]`;
 
       /** 以下非标准 */
       case 'enum':
@@ -497,12 +504,7 @@ export class ServiceGenerator {
         const props: string[] = [];
         if (schemaObject.properties) {
           Object.keys(schemaObject.properties).forEach(prop => {
-            props.push(
-              `${prop.includes('-') ? `"${prop}"` : prop}: ${this.getType(
-                schemaObject.properties[prop],
-                namespace
-              )};`
-            );
+            props.push(`${prop}: ${this.getType(schemaObject.properties[prop], namespace)};`);
           });
         }
         if (schemaObject.additionalProperties) {
