@@ -107,6 +107,11 @@ function fixRequestBody(data: any) {
 }
 
 function findRef(object: any) {
+  // 考虑到 example
+  if (!object || {}.toString.call(object) !== '[object Object]') {
+    return [];
+  }
+
   if (object.$ref) {
     return [object];
   }

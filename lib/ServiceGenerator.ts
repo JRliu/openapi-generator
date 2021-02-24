@@ -144,7 +144,7 @@ export class ServiceGenerator {
             return {
               typeName,
               ...props,
-              type: props.enum.map((v: string) => `"${v}"`).join(' | ')
+              type: props.enum.map((v: string) => `"${v}"`).join(' | '),
             };
           }
           if (props.type !== 'object') {
@@ -423,7 +423,7 @@ export class ServiceGenerator {
   }
 
   protected toCamelCase(s: string) {
-    return s.replace(/_(\w)/g, function(_all, letter) {
+    return s.replace(/_(\w)/g, function (_all, letter) {
       return letter.toUpperCase();
     });
   }
@@ -504,7 +504,12 @@ export class ServiceGenerator {
         const props: string[] = [];
         if (schemaObject.properties) {
           Object.keys(schemaObject.properties).forEach(prop => {
-            props.push(`${prop}: ${this.getType(schemaObject.properties[prop], namespace)};`);
+            props.push(
+              `${prop.includes('-') ? `"${prop}"` : prop}: ${this.getType(
+                schemaObject.properties[prop],
+                namespace
+              )};`
+            );
           });
         }
         if (schemaObject.additionalProperties) {
