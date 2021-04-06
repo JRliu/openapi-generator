@@ -1,11 +1,11 @@
 {
   "name": "@yzfe/swagger-openapi-generator",
-  "version": "0.1.41",
+  "version": "0.1.42",
   "description": "",
   "main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
   "bin": {
-    "openapi-generator": "./bin/index.js"
+    "openapi-generator": "bin/index.js"
   },
   "files": [
     "lib/**/*.njk",
