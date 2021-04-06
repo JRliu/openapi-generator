@@ -135,9 +135,9 @@ export class ServiceGenerator {
   }
 
   protected getInterfaceTP() {
-    const components = this.openAPIData.components;
+    const components = this.openAPIData.components || {};
     const data = [components.schemas].map(defines => {
-      return Object.keys(defines).map(typeName => {
+      return Object.keys(defines || {}).map(typeName => {
         try {
           const props: SchemaObject = this.resolveRefObject(defines[typeName]);
           if (props.type === 'string' && props.enum) {
