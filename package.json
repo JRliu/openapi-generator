@@ -1,6 +1,6 @@
 {
   "name": "@yzfe/swagger-openapi-generator",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "description": "",
   "main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
@@ -33,14 +33,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zhang740/openapi-generator.git"
+    "url": "git+https://github.com/MMF-FE/openapi-generator.git"
   },
   "author": "zhang740",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/zhang740/openapi-generator/issues"
+    "url": "https://github.com/MMF-FE/openapi-generator/issues"
   },
-  "homepage": "https://github.com/zhang740/openapi-generator#readme",
+  "homepage": "https://github.com/MMF-FE/openapi-generator#readme",
   "dependencies": {
     "@types/nunjucks": "^3.1.0",
     "@types/request": "^2.48.0",
