@@ -264,6 +264,9 @@ export class ServiceGenerator {
       return;
     }
     const mediaType = Object.keys(reqContent)[0];
+    if (!reqContent[mediaType]) {
+      return;
+    }
     const schema: SchemaObject = reqContent[mediaType].schema;
     if (schema.type === 'object' && schema.properties) {
       return {
