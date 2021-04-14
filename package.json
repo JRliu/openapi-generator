@@ -1,6 +1,6 @@
 {
   "name": "@yzfe/swagger-openapi-generator",
-  "version": "0.1.42",
+  "version": "0.1.43",
   "description": "",
   "main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
