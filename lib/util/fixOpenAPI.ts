@@ -21,13 +21,13 @@ function fixTag(data: OpenAPIObject) {
         if (finalNameMap[tagName]) {
           return finalNameMap[tagName];
         }
-        let tagObject: TagObject = tags.find(t => t.name === tagName);
+        let tagObject: TagObject = tags!.find(t => t.name === tagName)!;
         if (!tagObject) {
           tagObject = {
             name: tagName,
             description: tagName,
           };
-          tags.push(tagObject);
+          tags!.push(tagObject);
         }
         if (!testTypeNameValid(tagObject.name)) {
           const description = (tagObject.description || tagObject.name)
@@ -62,10 +62,10 @@ function fixUniqueTagOperation(data: OpenAPIObject) {
     ]
       .filter(o => o)
       .forEach(operation => {
-        operation.tags.forEach(tag => {
-          const key = `${tag}.${operation.operationId}`;
+        operation!.tags!.forEach(tag => {
+          const key = `${tag}.${operation!.operationId}`;
           if (tagOpNameCounter[key]) {
-            operation.operationId += `_${tagOpNameCounter[key]++}`;
+            operation!.operationId += `_${tagOpNameCounter[key]++}`;
           } else {
             tagOpNameCounter[key] = 1;
           }

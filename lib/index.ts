@@ -15,7 +15,7 @@ export class CliConfig extends GenConfig {
 export async function genSDK(cfg: string | CliConfig | CliConfig[]) {
   let configs: CliConfig[] = [];
 
-  [].concat(cfg).forEach(c => {
+  (cfg as CliConfig[]).slice().forEach(c => {
     if (typeof c === 'string') {
       let cfgData = require(c);
       if ((configs as any).__esModule) {
@@ -35,9 +35,9 @@ export async function genSDK(cfg: string | CliConfig | CliConfig[]) {
         ...new CliConfig(),
         ...cfg,
       };
-      cfg.sdkDir = getAbsolutePath(cfg.sdkDir);
-      cfg.interfaceTemplatePath = getAbsolutePath(cfg.interfaceTemplatePath);
-      cfg.templatePath = getAbsolutePath(cfg.templatePath);
+      cfg.sdkDir = getAbsolutePath(cfg.sdkDir!);
+      cfg.interfaceTemplatePath = getAbsolutePath(cfg.interfaceTemplatePath!);
+      cfg.templatePath = getAbsolutePath(cfg.templatePath!);
       return genFromUrl(cfg);
     })
   );
@@ -53,11 +53,11 @@ export async function genFromData(config: CliConfig, data: OpenAPIObject) {
     throw new CommonError(`数据格式不正确 ${config.api}`);
   }
 
-  mkdir(config.sdkDir);
+  mkdir(config.sdkDir!);
 
   if (config.saveOpenAPIData) {
     fs.writeFileSync(
-      path.join(config.sdkDir, 'origin.json'),
+      path.join(config.sdkDir!, 'origin.json'),
       JSON.stringify(data, null, 2),
       'utf8'
     );
@@ -73,15 +73,15 @@ export async function genFromData(config: CliConfig, data: OpenAPIObject) {
     throw new CommonError('数据格式不正确，仅支持 OpenAPI 3.0/Swagger 2.0');
   }
 
-  if (config.autoClear && fs.existsSync(config.sdkDir)) {
-    fs.readdirSync(config.sdkDir).forEach(file => {
+  if (config.autoClear && fs.existsSync(config.sdkDir!)) {
+    fs.readdirSync(config.sdkDir!).forEach(file => {
       if (
         !['d.ts', '.ts', '.js'].some(ext => path.extname(file) === ext) ||
         (config.requestLib && file.startsWith('base.'))
       ) {
         return;
       }
-      const absoluteFilePath = path.join(config.sdkDir, '/', file);
+      const absoluteFilePath = path.join(config.sdkDir!, '/', file);
       if ((config.ignoreDelete || []).indexOf(file) === -1 && absoluteFilePath !== file) {
         fs.unlinkSync(absoluteFilePath);
       }
@@ -89,7 +89,7 @@ export async function genFromData(config: CliConfig, data: OpenAPIObject) {
   }
 
   if (config.saveOpenAPIData) {
-    fs.writeFileSync(path.join(config.sdkDir, 'oas.json'), JSON.stringify(data, null, 2), 'utf8');
+    fs.writeFileSync(path.join(config.sdkDir!, 'oas.json'), JSON.stringify(data, null, 2), 'utf8');
   }
 
   const generator = new ServiceGenerator(config, data);
@@ -105,7 +105,7 @@ export async function convertSwagger2OpenAPI(data: OpenAPIObject) {
 
 export async function genFromUrl(config: CliConfig) {
   try {
-    const data = await JSON.parse(await requestData(config.api));
+    const data = await JSON.parse(await requestData(config.api!));
     return genFromData(config, data);
   } catch (error) {
     console.warn(config.api, error);

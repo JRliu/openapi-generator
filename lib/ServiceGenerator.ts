@@ -18,7 +18,7 @@ import { CommonError } from './util';
 
 export class GenConfig {
   /** 生成目录 */
-  sdkDir: string;
+  sdkDir?: string;
   /** Service模板文件路径 */
   templatePath?: string;
   /** Interface模板文件路径 */
@@ -63,7 +63,7 @@ export class ServiceGenerator {
       ['get', 'put', 'post', 'delete'].forEach(method => {
         const operationObject: OperationObject = pathItem[method];
         if (operationObject) {
-          operationObject.tags.forEach(tag => {
+          operationObject.tags!.forEach(tag => {
             if (!this.apiData[tag]) {
               this.apiData[tag] = [];
             }
@@ -118,8 +118,8 @@ export class ServiceGenerator {
 
   protected genRequestLib() {
     if (this.config.requestLib) {
-      this.mkdir(this.config.sdkDir);
-      const reqLibPath = path.join(this.config.sdkDir, `base.${this.config.type}`);
+      this.mkdir(this.config.sdkDir!);
+      const reqLibPath = path.join(this.config.sdkDir!, `base.${this.config.type}`);
 
       if (!fs.existsSync(reqLibPath)) {
         fs.writeFileSync(
@@ -139,7 +139,7 @@ export class ServiceGenerator {
     const data = [components.schemas].map(defines => {
       return Object.keys(defines || {}).map(typeName => {
         try {
-          const props: SchemaObject = this.resolveRefObject(defines[typeName]);
+          const props: SchemaObject = this.resolveRefObject(defines![typeName]);
           if (props.type === 'string' && props.enum) {
             return {
               typeName,
@@ -155,7 +155,7 @@ export class ServiceGenerator {
 
           const propsData = props.properties
             ? Object.keys(props.properties).map(propName => {
-                const propSchema: SchemaObject = props.properties[propName];
+                const propSchema: SchemaObject = props.properties![propName];
                 return {
                   ...propSchema,
                   name: propName,
@@ -177,7 +177,7 @@ export class ServiceGenerator {
               propsData.push({
                 name: '[key: string]',
                 type: this.getType(props.additionalProperties),
-                desc: (props.additionalProperties as SchemaObject).description,
+                desc: (props.additionalProperties as SchemaObject).description!,
                 required: true,
               });
             }
@@ -213,14 +213,14 @@ export class ServiceGenerator {
             const body = this.getBodyTP(api.requestBody);
             const response = this.getResponseTP(api.responses);
 
-            let functionName = this.config.hook.customFunctionName
-              ? this.config.hook.customFunctionName(api)
+            let functionName = this.config.hook!.customFunctionName
+              ? this.config.hook!.customFunctionName(api)
               : api.operationId;
 
-            if (tmpFunctionRD[functionName]) {
-              functionName = `${functionName}_${tmpFunctionRD[functionName]++}`;
+            if (tmpFunctionRD[functionName!]) {
+              functionName = `${functionName}_${tmpFunctionRD[functionName!]++}`;
             } else {
-              tmpFunctionRD[functionName] = 1;
+              tmpFunctionRD[functionName!] = 1;
             }
 
             return {
@@ -242,8 +242,8 @@ export class ServiceGenerator {
           }
         });
 
-      const className = this.config.hook.customClassName
-        ? this.config.hook.customClassName(tag)
+      const className = this.config.hook!.customClassName
+        ? this.config.hook!.customClassName(tag)
         : this.toCamelCase(tag);
       return {
         genType: this.config.type,
@@ -267,7 +267,7 @@ export class ServiceGenerator {
     if (!reqContent[mediaType]) {
       return;
     }
-    const schema: SchemaObject = reqContent[mediaType].schema;
+    const schema: SchemaObject = reqContent[mediaType].schema!;
     if (schema.type === 'object' && schema.properties) {
       return {
         mediaType,
@@ -275,8 +275,8 @@ export class ServiceGenerator {
         propertiesList: Object.keys(schema.properties).map(p => ({
           key: p,
           schema: {
-            ...schema.properties[p],
-            type: this.getType(schema.properties[p], this.config.namespace),
+            ...schema.properties![p],
+            type: this.getType(schema.properties![p], this.config.namespace),
           },
         })),
       };
@@ -288,7 +288,7 @@ export class ServiceGenerator {
   }
 
   protected getResponseTP(responses?: ResponsesObject) {
-    const response: ResponseObject = this.resolveRefObject(responses.default || responses['200']);
+    const response: ResponseObject = this.resolveRefObject(responses!.default || responses!['200']);
     const defaultResponse = {
       mediaType: '*/*',
       type: 'any',
@@ -296,7 +296,7 @@ export class ServiceGenerator {
     if (!response) {
       return defaultResponse;
     }
-    const resContent: ContentObject = response.content;
+    const resContent: ContentObject = response.content!;
     if (typeof resContent !== 'object') {
       return defaultResponse;
     }
@@ -304,7 +304,7 @@ export class ServiceGenerator {
     const schema = resContent[mediaType].schema;
     return {
       mediaType,
-      type: this.getType(schema, this.config.namespace),
+      type: this.getType(schema!, this.config.namespace),
     };
   }
 
@@ -319,7 +319,7 @@ export class ServiceGenerator {
         .filter((p: ParameterObject) => p.in === source)
         .map(p => ({
           ...p,
-          type: this.getType(p.schema, this.config.namespace),
+          type: this.getType(p.schema!, this.config.namespace),
         }));
 
       if (params.length) {
@@ -340,7 +340,7 @@ export class ServiceGenerator {
   }
 
   protected writeFile(fileName: string, content: string) {
-    const filePath = path.join(this.config.sdkDir, fileName);
+    const filePath = path.join(this.config.sdkDir!, fileName);
     this.mkdir(path.dirname(filePath));
     fs.writeFileSync(filePath, content, { encoding: 'utf8' });
   }
@@ -390,6 +390,7 @@ export class ServiceGenerator {
       }
       return obj.$ref ? this.resolveRefObject(obj) : obj;
     }
+    return refObject;
   }
 
   protected getRefName(refObject: any) {
@@ -486,7 +487,7 @@ export class ServiceGenerator {
         return 'boolean';
 
       case 'array':
-        return `${this.getType(schemaObject.items, namespace)}[]`;
+        return `${this.getType(schemaObject.items!, namespace)}[]`;
 
       /** 以下非标准 */
       case 'enum':
@@ -509,7 +510,7 @@ export class ServiceGenerator {
           Object.keys(schemaObject.properties).forEach(prop => {
             props.push(
               `${prop.includes('-') ? `"${prop}"` : prop}: ${this.getType(
-                schemaObject.properties[prop],
+                schemaObject.properties![prop],
                 namespace
               )};`
             );
