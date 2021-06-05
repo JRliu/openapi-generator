@@ -53,6 +53,7 @@
     "openapi3-ts": "^1.1.0",
     "p-queue": "^7.1.0",
     "request": "^2.88.0",
+    "superagent": "^6.1.0",
     "swagger2openapi": "^5.3.1",
     "tencentcloud-sdk-nodejs": "^4.0.134",
     "tslib": "^1.9.3"
@@ -60,6 +61,7 @@
   "keywords": [],
   "devDependencies": {
     "@types/node": "^10.7.1",
+    "@types/superagent": "^4.1.11",
     "ava": "^0.25.0",
     "coveralls": "^3.0.2",
     "nyc": "^12.0.2",
@@ -67,7 +69,7 @@
     "rollup": "^2.50.6",
     "rollup-plugin-typescript2": "^0.30.0",
     "tslint": "5.11.0",
-    "typescript": "^3.0.1",
+    "typescript": "^4.3.2",
     "webpack": "^4.17.0"
   }
 }

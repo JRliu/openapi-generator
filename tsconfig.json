@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "module": "ES2020",
+    "module": "ESNext",
     "noImplicitAny": true,
     "sourceMap": true,
     "noUnusedParameters": true,
@@ -18,8 +18,9 @@
     "strict": true,
     "outDir": "./dist",
     "allowSyntheticDefaultImports": true,
-    "declaration": true
+    "declaration": true,
+    "esModuleInterop": true
   },
   "include": ["lib/**/*.ts", "typings/**.ts"],
-  "exclude": []
+  "exclude": ["node_modules"]
 }

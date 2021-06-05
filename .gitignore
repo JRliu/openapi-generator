@@ -5,7 +5,8 @@ npm-debug.log*
 
 dist
 es
-*.js
+test/*.js
+lib/**/*.js
 *.d.ts
 *.js.map
 !typings/**/*.d.ts
