@@ -44,7 +44,8 @@ function fixRefName(data: any) {
   let count = 0;
   Object.keys(refMap).forEach(key => {
     if (!testTypeNameValid(key)) {
-      let newName = key.replace(/[^a-zA-Z0-9_]/g, '_');
+      let newName = data.definitions[key].typeName;
+      //   let newName = key.replace(/[^a-zA-Z0-9_]/g, '_');
       newName = data.definitions[newName] ? `${renameTypePrefix}${count}` : newName;
 
       data.definitions[newName] = data.definitions[key];
@@ -108,7 +109,7 @@ function fixRequestBody(data: any) {
 
 function findRef(object: any) {
   // 考虑到 example
-  if (!object || {}.toString.call(object) !== '[object Object]') {
+  if (!object || typeof object !== 'object') {
     return [];
   }
 
