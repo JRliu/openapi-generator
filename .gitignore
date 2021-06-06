@@ -9,6 +9,7 @@ test/*.js
 lib/**/*.js
 *.d.ts
 *.js.map
+!lib/cli/*.js
 !typings/**/*.d.ts
 
 # Runtime data

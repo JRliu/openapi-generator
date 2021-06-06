@@ -4,8 +4,9 @@ import { OpenAPIObject } from 'openapi3-ts';
 import { s2o, fixSwagger, fixOpenAPI, requestData, CommonError } from './util';
 // import { hadZh } from './util/const';
 import { ServiceGenerator, GenConfig } from './ServiceGenerator';
-import * as tencentcloud from 'tencentcloud-sdk-nodejs';
+// import * as tencentcloud from 'tencentcloud-sdk-nodejs';
 // import PQueue from 'p-queue';
+// console.log(PQueue, '===');
 
 export const TencentCloudConfig = {
   secretId: '',
@@ -20,31 +21,31 @@ export function config(cfg: { tencentCloudSecretId?: string; tencentCloudSecretK
   }
 }
 
-let _translateClient: any = null;
+// let _translateClient: any = null;
 
-function getTranslateClient() {
-  if (_translateClient) {
-    return _translateClient;
-  }
-  const TmtClient = tencentcloud.tmt.v20180321.Client;
+// function getTranslateClient() {
+//   if (_translateClient) {
+//     return _translateClient;
+//   }
+//   const TmtClient = tencentcloud.tmt.v20180321.Client;
 
-  const clientConfig = {
-    credential: {
-      secretId: TencentCloudConfig.secretId || 'AKID60e17wUlmWzA4i5AyWmlTv60dz4sPfeL',
-      secretKey: TencentCloudConfig.secretKey || 'RbU6RUGl34oHTO1MPBfspUszpOffOr3x',
-    },
-    region: 'ap-guangzhou',
-    profile: {
-      httpProfile: {
-        endpoint: 'tmt.tencentcloudapi.com',
-      },
-    },
-  };
+//   const clientConfig = {
+//     credential: {
+//       secretId: TencentCloudConfig.secretId || 'AKID60e17wUlmWzA4i5AyWmlTv60dz4sPfeL',
+//       secretKey: TencentCloudConfig.secretKey || 'RbU6RUGl34oHTO1MPBfspUszpOffOr3x',
+//     },
+//     region: 'ap-guangzhou',
+//     profile: {
+//       httpProfile: {
+//         endpoint: 'tmt.tencentcloudapi.com',
+//       },
+//     },
+//   };
 
-  const translateClient = new TmtClient(clientConfig);
-  _translateClient = translateClient;
-  return translateClient;
-}
+//   const translateClient = new TmtClient(clientConfig);
+//   _translateClient = translateClient;
+//   return translateClient;
+// }
 
 export class CliConfig extends GenConfig {
   api?: string;
@@ -146,14 +147,14 @@ export async function convertSwagger2OpenAPI(data: OpenAPIObject) {
 }
 
 export async function genFromUrl(config: CliConfig) {
-  const translateClient = getTranslateClient();
-  const getParam = (text: string) => ({
-    SourceText: text,
-    Source: 'zh',
-    Target: 'en',
-    ProjectId: 0,
-  });
-  console.log(translateClient, getParam);
+  //   const translateClient = getTranslateClient();
+  //   const getParam = (text: string) => ({
+  //     SourceText: text,
+  //     Source: 'zh',
+  //     Target: 'en',
+  //     ProjectId: 0,
+  //   });
+  //   console.log(translateClient, getParam);
 
   //   function asyncPool(poolLimit: number, array: any[], iteratorFn: (...arg: any) => Promise<any>) {
   //     let i = 0;
@@ -185,7 +186,11 @@ export async function genFromUrl(config: CliConfig) {
   //   }
 
   try {
-    const data = await JSON.parse(await requestData(config.api!));
+    const res = await requestData(config.api!);
+    let data = res;
+    if (typeof res === 'string') {
+      data = JSON.parse(res);
+    }
     // 翻译data['definitions']中的中文key
     // 最多并发5条
     // const LIMIT = 4;
@@ -265,26 +270,26 @@ function mkdir(dir: string) {
   }
 }
 
-genSDK({
-  //   api: 'https://petstore.swagger.io/v2/swagger.json',
-  api: 'http://10.50.7.201:8080/v2/api-docs?group=SR-APP',
-  sdkDir: path.join(__dirname, './src/api/pet'),
-  namespace: 'Pet',
-  filter: [
-    // (api) => {
-    //     const allowPrePaths = ['/api/v1/pet/']
-    //     api.ns = ''
-    //     if (api.tags && api.tags.length) {
-    //         api.ns = String(api.tags[0] || '').replace('Controller', '')
-    //         // api.tags[0] = api.ns
-    //     }
-    //     const apiPath = String(api.path)
-    //     for (const allow of allowPrePaths) {
-    //         if (apiPath.startsWith(allow)) {
-    //             return true
-    //         }
-    //     }
-    //     return false
-    // },
-  ],
-});
+// genSDK({
+//   //   api: 'https://petstore.swagger.io/v2/swagger.json',
+//   api: 'http://10.50.7.201:8080/v2/api-docs?group=SR-APP',
+//   sdkDir: path.join(__dirname, './src/api/pet'),
+//   namespace: 'Pet',
+//   filter: [
+//     // (api) => {
+//     //     const allowPrePaths = ['/api/v1/pet/']
+//     //     api.ns = ''
+//     //     if (api.tags && api.tags.length) {
+//     //         api.ns = String(api.tags[0] || '').replace('Controller', '')
+//     //         // api.tags[0] = api.ns
+//     //     }
+//     //     const apiPath = String(api.path)
+//     //     for (const allow of allowPrePaths) {
+//     //         if (apiPath.startsWith(allow)) {
+//     //             return true
+//     //         }
+//     //     }
+//     //     return false
+//     // },
+//   ],
+// });

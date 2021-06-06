@@ -23,7 +23,6 @@ export async function requestData(url: string) {
       // @ts-ignore
       throw new Error(response);
     }
-
     return response.body;
   } catch (error) {
     console.warn('[GenSDK] err', error);
