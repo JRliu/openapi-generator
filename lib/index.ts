@@ -8,8 +8,8 @@ import * as tencentcloud from 'tencentcloud-sdk-nodejs';
 import PQueue from 'p-queue';
 
 export const TencentCloudConfig = {
-  secretId: '',
-  secretKey: '',
+  secretId: 'AKID60e17wUlmWzA4i5AyWmlTv60dz4sPfeL',
+  secretKey: 'RbU6RUGl34oHTO1MPBfspUszpOffOr3x',
 };
 
 export function config(cfg: { tencentCloudSecretId?: string; tencentCloudSecretKey?: string }) {
@@ -149,7 +149,7 @@ export async function convertSwagger2OpenAPI(data: OpenAPIObject) {
   return data;
 }
 
-export async function genFromUrl(config: CliConfig) {
+export async function translateTexts(textArr: string[]) {
   const translateClient = getTranslateClient();
   const getParam = (text: string) => ({
     SourceText: text,
@@ -158,6 +158,45 @@ export async function genFromUrl(config: CliConfig) {
     ProjectId: 0,
   });
 
+  // 限制每秒并发
+  const LIMIT = 2;
+
+  const translateTasks = [] as (() => Promise<any>)[];
+  const result = {} as Record<string, string>;
+  const iteratorFn = async (k: string) => {
+    let t = k.replace(/[\s«»<>《》]/g, '_');
+    // 分词，将单词首字母变为大写
+    if (hadZh(k)) {
+      // 如果key是中文，则增加翻译任务
+      translateTasks.push(async () => {
+        const res = await translateClient.TextTranslate(getParam(k));
+        t = res.TargetText.replace('-', ' ');
+        let tStrs = t.split(' ');
+        tStrs = tStrs.map(n => {
+          return `${n[0].toUpperCase()}${n.slice(1)}`;
+        });
+
+        t = tStrs.join('').replace(/\s/g, '');
+
+        result[k] = t;
+      });
+    }
+  };
+
+  textArr.forEach(k => iteratorFn(k));
+
+  const queue = new PQueue({
+    concurrency: LIMIT,
+    interval: 1000,
+    intervalCap: LIMIT,
+    //   carryoverConcurrencyCount: true,
+  });
+  await queue.addAll(translateTasks);
+
+  return result;
+}
+
+export async function genFromUrl(config: CliConfig) {
   try {
     const res = await requestData(config.api!);
     let data = res;
@@ -165,49 +204,21 @@ export async function genFromUrl(config: CliConfig) {
       data = JSON.parse(res);
     }
     // 翻译data['definitions']中的中文key
-    // 限制每秒并发
-    const LIMIT = 2;
     let definitions = data.definitions as Pick<string, any>;
-
-    const translateTasks = [] as (() => Promise<any>)[];
 
     const iteratorFn = async (k: string) => {
       let typeName = k.replace(/[\s«»<>《》]/g, '_');
-      // 分词，将单词首字母变为大写
-      if (hadZh(k)) {
-        // 如果key是中文，则增加翻译任务
-        translateTasks.push(async () => {
-          const res = await translateClient.TextTranslate(getParam(k));
-          typeName = res.TargetText.replace('-', ' ');
-          let nameStrs = typeName.split(' ');
-          nameStrs = nameStrs.map(n => {
-            return `${n[0].toUpperCase()}${n.slice(1)}`;
-          });
-          typeName = nameStrs.join('').replace(/\s/g, '');
 
-          // @ts-ignore
-          definitions[k].typeName = typeName;
-
-          return { [k]: typeName };
-        });
-      }
       // @ts-ignore
-      definitions[k].typeName = typeName;
+      definitions[k].typeName = translatedZhObjs[k] ? translatedZhObjs[k] : typeName;
     };
 
     const kArr = Object.keys(definitions);
 
+    const translatedZhObjs = await translateTexts(kArr);
+
     kArr.forEach(k => iteratorFn(k));
-
-    const queue = new PQueue({
-      concurrency: LIMIT,
-      interval: 1000,
-      intervalCap: LIMIT,
-      //   carryoverConcurrencyCount: true,
-    });
-    const results = await queue.addAll(translateTasks);
-
-    console.log(results, '=====result');
+    console.log(translatedZhObjs, '=====translatedZhObjs');
 
     return await genFromData(config, data);
   } catch (error) {
