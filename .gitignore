@@ -5,11 +5,13 @@ npm-debug.log*
 
 dist
 es
-test/*.js
-lib/**/*.js
+test/*
+!test/index.js
+!test/config.js
+src/**/*.js
 *.d.ts
 *.js.map
-!lib/cli/*.js
+!src/cli/*.js
 !typings/**/*.d.ts
 
 # Runtime data

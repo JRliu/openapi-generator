@@ -21,6 +21,6 @@
     "declaration": true,
     "esModuleInterop": true
   },
-  "include": ["lib/**/*.ts", "typings/**.ts", "lib/cli/index.js"],
+  "include": ["src/**/*.ts", "typings/**.ts", "src/cli/index.js"],
   "exclude": ["node_modules"]
 }

@@ -1,0 +1,98 @@
+{# 第一个字母大写，其他不变 #}
+{%- macro capitalizeFirst(value = '') -%}
+    {{- value.slice(0, 1) | upper }}{{ value.slice(1) -}}
+{%- endmacro -%}
+
+{# 得到真正的方法名，去掉 Using[method]_数字 的后缀 #}
+{%- macro functionName(name = '', method = '') -%}
+    {%- if name.includes('::') -%}
+        {{- name.split('::').pop() -}}
+    {%- else -%}
+        {{- name | replace(r/Using(POST|GET|PUT|DELETE|HEAD)_?\d*|_\d*/gi, '') -}}
+    {%- endif -%}
+{%- endmacro -%}
+
+{# 通过 api 获取方法名，防止重名就加上请求 method #}
+{%- macro getFunctionName(api) -%}
+    {% set name = functionName(name = api.functionName, method = api.method) %}
+    {%- if api.method.toLowerCase() != name.toLowerCase().substr(0, api.method.length) -%}
+        {{- api.method -}}
+        {{- capitalizeFirst(name) -}}
+    {%- else -%}
+        {{- name -}}
+    {%- endif -%}
+{% endmacro %}
+
+{# 获取axios使用的responseType #}
+{%- macro getAxiosResponseType(type) -%}
+   {%- if type.includes('text') -%}
+        {{- "text" | safe -}}
+    {%- else -%}
+        {{- "null" | safe -}}
+   {%- endif -%}
+{% endmacro %}
+
+// @ts-nocheck
+/* eslint-disable */
+
+import request from '../request';
+
+type Options = Parameters<typeof request>['1']
+
+{% for api in list | sort(fase, true, "functionName") -%}
+{% set capName = capitalizeFirst(getFunctionName(api)) %}
+
+/**
+  {{ api.desc }}
+*/
+{%- if getFunctionName(api) != 'delete' %}
+export function {{ getFunctionName(api) }} (
+{% else %}
+export function del (
+{% endif %}
+
+{%- if api.params %}
+params: {{ namespace }}.Params{{ api.ns }}{{ capName }},
+{%- endif -%}
+
+{%- if api.body %}
+  data: {% if api.body.propertiesList %}
+            {{ namespace }}.Body{{ api.ns }}{{ capName }},
+        {%- else -%}
+            {{ api.body.type }},
+        {%- endif -%}
+{%- endif %}
+options: Options = {}
+){{ (": Promise<" + api.response.type + ">") | safe if genType === "ts" }} {
+  {% if api.params and api.params.path -%}
+    const { {% for param in api.params.path %}{{ param.name }}, {% endfor %} } = params;
+    {% for param in api.params.path -%}
+        delete params.{{param.name}}
+    {% endfor -%}
+  {% endif -%}
+
+
+
+  return request(`{{api.prefix}}{{ api.path | safe }}`, {
+    method: `{{ api.method | upper }}`,
+    {%- if api.hasHeader %}
+    headers: {
+      {%- if api.body.mediaType %}
+      'Content-Type': '{{ api.body.mediaType | safe }}',
+      {%- endif %}
+    },
+    {%- endif %}
+    {%- if api.params %}
+        params,
+    {%- endif -%}
+    {%- if api.body %}
+        data,
+    {%- endif %}
+    {%- if getAxiosResponseType(api.response.mediaType) != "null" %}
+    responseType: {{getAxiosResponseType(api.response.mediaType) | safe}},
+    {%- endif %}
+    ...options
+  }, '{{api.ns}}');
+}
+
+{% endfor -%}

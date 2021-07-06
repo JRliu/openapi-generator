@@ -2,7 +2,7 @@ import typescript from 'rollup-plugin-typescript2';
 import { dependencies, main, module } from './package.json';
 
 export default {
-  input: 'lib/index.ts',
+  input: 'src/index.ts',
   output: [
     {
       file: main,

@@ -1,64 +1,108 @@
-# openapi-generator
+## openapi-genrator
 
-[![NPM version][npm-image]][npm-url]
-[![build status][travis-image]][travis-url]
-[![Test coverage][codecov-image]][codecov-url]
-[![David deps][david-image]][david-url]
-[![Known Vulnerabilities][snyk-image]][snyk-url]
-[![npm download][download-image]][download-url]
+根据 swagger 文档生成 api 代码及其类型
 
-[npm-image]: https://img.shields.io/npm/v/openapi-generator.svg?style=flat-square
-[npm-url]: https://npmjs.org/package/openapi-generator
-[travis-image]: https://img.shields.io/travis/zhang740/openapi-generator.svg?style=flat-square
-[travis-url]: https://travis-ci.org/zhang740/openapi-generator
-[codecov-image]: https://codecov.io/github/zhang740/openapi-generator/coverage.svg?branch=master
-[codecov-url]: https://codecov.io/github/zhang740/openapi-generator?branch=master
-[david-image]: https://img.shields.io/david/zhang740/openapi-generator.svg?style=flat-square
-[david-url]: https://david-dm.org/zhang740/openapi-generator
-[snyk-image]: https://snyk.io/test/npm/openapi-generator/badge.svg?style=flat-square
-[snyk-url]: https://snyk.io/test/npm/openapi-generator
-[download-image]: https://img.shields.io/npm/dm/openapi-generator.svg?style=flat-square
-[download-url]: https://npmjs.org/package/openapi-generator
+### 安装
 
-# Quick View
-
-openapi-generator from swagger 2.0 or OpenAPI 3.0:
-
-## Simple
-
-`openapi-generator url http://xxx/v2/api-docs -c true`
-
-## Use Config
-
-`openapi-generator config ./xxx.js` or `openapi-generator config ./xxx.json`
-
-Config interface:
-
-```ts
-interface CliConfig {
-  api: string;
-
-  /** dir for openapi-generator */
-  sdkDir: string;
-  /** path of service template */
-  templatePath?: string;
-  /** path of interface template */
-  interfaceTemplatePath?: string;
-  /** request lib */
-  requestLib = true;
-  /** filename style, true 为大驼峰，lower 为小驼峰 */
-  camelCase?: boolean | 'lower' = false;
-  /** gen type */
-  type?: 'ts' | 'js' = 'ts';
-  /** service type */
-  serviceType?: 'function' | 'class' = 'function';
-  /** namespace of typings */
-  namespace?: string = 'API';
-  /** 自动清除旧文件时忽略列表 */
-  ignoreDelete: string[] = [];
-}
+```bash
+yarn add @lauginwing/openapi-genrator
 ```
 
-### genAPISDK
+### 使用
 
-`function genAPISDK(data: RouteMetadataType[], config: GenConfig) => void`
+- cli 使用
+
+```bash
+openapi-gen -c ./config.js
+// -c : 设定配置文件所在地址，不传则默认取终端当前目录下的genapiconfig.js
+
+// 本地使用
+npx openapi-gen -c ./config.js
+```
+
+- js 调用
+
+```js
+import { gen, configure } from '@lauginwing/openapi-genrator';
+import apiConfig from './genapiconfig.ts';
+configure({
+  // 腾讯云的秘钥，用于翻译api文档中的中文模块名。可选
+  tencentCloudSecretId: secretId,
+  tencentCloudSecretKey: secretKey,
+});
+
+gen(apiConfig);
+```
+
+### 配置
+
+一般情况下，只需配置前四项即可
+
+例子
+
+```js
+// config.js
+const path = require('path');
+
+exports.apiConfig = [
+  {
+    api: `https://petstore.swagger.io/v2/swagger.json`,
+    sdkDir: path.join(__dirname, './src/api/pet'),
+    namespace: 'Pet',
+    prefix: '/pet',
+  },
+];
+```
+
+完整类型:
+
+> 参考 https://github.com/zhang740/openapi-generator#readme
+
+```ts
+interface ApiConfig {
+  /** api文档地址 **/
+  api: string;
+  /** 生成目录 */
+  sdkDir: string;
+  /** 复杂类型命名空间 */
+  namespace?: string;
+  /** 在每个请求的请求地址前加的前缀 */
+  prefix?: string;
+
+  saveOpenAPIData?: boolean;
+
+  autoClear?: boolean;
+  /** 自动清除旧文件时忽略列表 */
+  ignoreDelete?: string[];
+  /** 参数类型的模板的地址 */
+  paramInterfaceTemplatePath?: string;
+  /** Service模板文件路径 */
+  templatePath?: string;
+  /** Interface模板文件路径 */
+  interfaceTemplatePath?: string;
+  /** 生成请求库 */
+  requestLib?: boolean;
+  /** filename style, true 为大驼峰，lower 为小驼峰 */
+  camelCase?: boolean | 'lower';
+  /** gen type */
+  type?: 'ts' | 'js';
+  /** 生成 Service 类型 */
+  serviceType?: 'function' | 'class';
+  /** 拿到 swagger json ，做前置处理，返回处理好的数据 **/
+  beforeParseSwagger?: (data: SwaggerJSon | OpenApiJson) => Promise<SwaggerJSon | OpenApiJson>;
+  /** 数据处理钩子 */
+  hook?: {
+    /** 自定义函数名称 */
+    customFunctionName?: (data: OperationObject) => string;
+    /** 自定义类名 */
+    customClassName?: (tagName: string) => string;
+  };
+  /** path过滤 */
+  filter?: (RegExp | ((data: APIDataType) => boolean))[];
+}
+
+interface Config {
+  tencentCloudSecretId: string;
+  tencentCloudSecretKey: string;
+}
+```
